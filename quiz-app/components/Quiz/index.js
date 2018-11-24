@@ -3,10 +3,7 @@ import { Text, View, ListView,StyleSheet,ScrollView} from 'react-native';
 import RadioGroup from 'react-native-radio-buttons-group';
 import {  } from 'expo';
 
-var radio_props = [
-  {label: 'param1', value: 0 },
-  {label: 'param2', value: 1 }
-];
+import store from './store.js'
 
 export default class Quiz extends React.Component {
 
@@ -14,31 +11,17 @@ export default class Quiz extends React.Component {
     super();
     this.state = {
       data: [],
-      radioBtnData : [{value : 'test' , label:"test"}]
     };
   }
 
-
-  handledata = () => {
-  
-}
+ 
   componentDidMount () {
-    fetch('https://opentdb.com/api.php?amount=10')
-    .then((response) => response.json())
+    store.getQuizData()
     .then((responseJson) => {
-   var radioButtonArray = []
+  
       this.setState({
         data: responseJson.results
       })
-     this.state.data.forEach(element => {
-  
-      radioButtonArray.push({value: element.correct_answer, label : element.correct_answer})
-  
-        element.incorrect_answers.forEach(element2 => {
-          radioButtonArray.push({value: element2, label : element2})
-        } )
-      })
-  
      
   
     })
@@ -52,24 +35,33 @@ export default class Quiz extends React.Component {
     title: 'Trivia Quiz',
   };
   
-  onPress = data => this.setState({ data });
+  onPress =(index) => {
+  store.radioButtonArrayUI.forEach( element => {
+    console.log(element)
+  })
+  }
   
   render() {
-    // let selectedButton = this.state.data.find(e => e.selected == true);
-    // selectedButton = selectedButton ? selectedButton.value : this.state.data[0].label;
-console.log(this.state.radioBtnData)
       return (
         <ScrollView>
        
 
         {this.state.data.map( (d,i) => {
+           
+           store.radioButtonArrayUI = d.incorrect_answers.map( d2 => {return {value: d2, label : d2}});
+           
+           store.radioButtonArrayUI.push({value: d.correct_answer , label : d.correct_answer})
+          
+           store.quizData.push( d.incorrect_answers.map( d2 => {return {value: d2, label : d2}}),{value: d.correct_answer , label : d.correct_answer} )
 
+           console.log("starting here    ",store.quizData)
               return (
                 <View  style={styles.container} key={i}>
                 <Text style={{ fontSize: 18 }}>
               {i+1 + ')'}{d.question}
                 </Text>
-                <RadioGroup radioButtons={this.state.radioBtnData} onPress={this.onPress} />
+                {store.radioButtonArrayUI ? <RadioGroup radioButtons={store.radioButtonArrayUI} onPress={() => {this.onPress(i)}} /> : null }
+                
                 </View>
               )
 
@@ -85,7 +77,6 @@ console.log(this.state.radioBtnData)
 
 const styles = StyleSheet.create({
   container: {
-    // padding : '10px',
     alignItems: 'center',
     justifyContent: 'center',
   },
